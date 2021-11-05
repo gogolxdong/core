@@ -20,6 +20,7 @@
 #include "CombatBotBaseAI.h"
 #include "Group.h"
 #include "ObjectAccessor.h"
+#include "PlayerBotMgr.h"
 
 
 class PartyBotAI : public CombatBotBaseAI
@@ -36,9 +37,12 @@ public:
     }
     bool OnSessionLoaded(PlayerBotEntry* entry, WorldSession* sess) override
     {
-        return SpawnNewPlayer(sess, m_class, m_race, m_mapId, m_instanceId, m_x, m_y, m_z, m_o, sObjectAccessor.FindPlayer(m_cloneGuid));
+        sess->LoginPlayer(entry->playerGUID);
+        return true;
+        // return SpawnNewPlayer(sess, m_class, m_race, m_mapId, m_instanceId, m_x, m_y, m_z, m_o, sObjectAccessor.FindPlayer(m_cloneGuid));
     }
 
+    void SetRole(CombatBotRoles role) {m_role = role;};
     void OnPlayerLogin() final;
     void UpdateAI(uint32 const diff) final;
     void OnPacketReceived(WorldPacket const* packet) final;

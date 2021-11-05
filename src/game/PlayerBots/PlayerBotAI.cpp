@@ -46,6 +46,8 @@ void PlayerBotAI::UpdateAI(uint32 const diff)
     }
     if (me->IsBeingTeleportedFar())
         me->GetSession()->HandleMoveWorldportAckOpcode();
+
+        
 }
 
 void PlayerBotAI::Remove()
@@ -164,7 +166,7 @@ void MageOrgrimmarAttackerAI::UpdateAI(uint32 const diff)
     /// COMBAT AI
     if (me->IsNonMeleeSpellCasted(false) || (me->HasAura(AURA_REGEN_MANA) && me->GetPower(POWER_MANA) != me->GetMaxPower(POWER_MANA)))
         return;
-    float range = me->IsInCombat() ? 30.0f : frand(15, 30);
+    float range = me->IsInCombat() ? 30.0f : frand(0, 30);
     Unit* target = me->SelectNearestTarget(range);
     if (target && !me->IsWithinLOSInMap(target))
         target = nullptr;

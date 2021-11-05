@@ -21534,21 +21534,21 @@ void Player::RewardHonorOnDeath()
 
     winner->SetMoney(winner->GetMoney() + rewardMoney);
     winner->GiveXP(winnerLvl * 10, winner);
-    for (const auto &rewItr : damagePerAlonePlayer)
-    {
-        const uint32 victimMoney = GetMoney();
+    // for (const auto &rewItr : damagePerAlonePlayer)
+    // {
+    //     const uint32 victimMoney = GetMoney();
 
-        SetMoney(victimMoney - rewardMoney);
+    //     SetMoney(victimMoney - rewardMoney);
 
-        if (!rewItr.first->IsHonorOrXPTarget(this))
-        {
-            continue;
-        }
+    //     if (!rewItr.first->IsHonorOrXPTarget(this))
+    //     {
+    //         continue;
+    //     }
 
-        uint32 rewPoints = uint32(HonorMgr::HonorableKillPoints(rewItr.first, this, 1) * rewItr.second / float(totalDamage));
-        if (rewPoints)
-            rewItr.first->GetHonorMgr().Add(rewPoints, HONORABLE, this);
-    }
+    //     uint32 rewPoints = uint32(HonorMgr::HonorableKillPoints(rewItr.first, this, 1) * rewItr.second / float(totalDamage));
+    //     if (rewPoints)
+    //         rewItr.first->GetHonorMgr().Add(rewPoints, HONORABLE, this);
+    // }
 
 }
 

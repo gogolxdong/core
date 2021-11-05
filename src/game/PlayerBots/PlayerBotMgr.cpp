@@ -527,7 +527,9 @@ bool ChatHandler::HandleBotAddCommand(char *args)
     // Player(session).SetAtLoginFlag(AT_LOGIN_RELOCATE);
     e->playerGUID = guid;
     e->state = PB_STATE_LOADING;
-    PlayerBotAI* ai = CreatePlayerBotAI("MageOrgrimmarAttackerAI");
+    
+    // PlayerBotAI* ai = CreatePlayerBotAI("MageOrgrimmarAttackerAI");
+    PlayerBotAI* ai = new PartyBotAI(pPlayer, nullptr, ROLE_INVALID,1,1,pPlayer->GetLevel(), pPlayer->GetMapId(), 0, p.x,p.y,p.z,p.o);
     ai->m_mapId = pPlayer->GetMapId();
     ai->m_x = p.x;
     ai->m_y = p.y;
@@ -535,7 +537,6 @@ bool ChatHandler::HandleBotAddCommand(char *args)
     e->ai = ai;
 
     sPlayerBotMgr.m_bots[e->playerGUID] = e;
-    // sPlayerBotMgr.m_totalChance += chance;
 
     session->SetBot(e);
     sWorld.AddSession(session);
