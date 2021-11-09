@@ -38,6 +38,9 @@ public:
     bool OnSessionLoaded(PlayerBotEntry* entry, WorldSession* sess) override
     {
         sess->LoginPlayer(entry->playerGUID);
+        // Player* player = new Player(sess);
+        // player->Relocate(m_x,m_y,m_z, m_o);
+        // player->SetLocationMapId(m_mapId);
         return true;
         // return SpawnNewPlayer(sess, m_class, m_race, m_mapId, m_instanceId, m_x, m_y, m_z, m_o, sObjectAccessor.FindPlayer(m_cloneGuid));
     }

@@ -3238,10 +3238,12 @@ void Player::UninviteFromGroup()
 
 void Player::RemoveFromGroup(Group *group, ObjectGuid guid)
 {
+    // sLog.outError("group:%p", group);
     if (group)
     {
         if (group->RemoveMember(guid, 0) <= 1)
         {
+            // sLog.outError("RemoveMember:%p", group);
             // group->Disband(); already disbanded in RemoveMember
             sObjectMgr.RemoveGroup(group);
             delete group;
@@ -21521,34 +21523,39 @@ void Player::RewardHonorOnDeath()
     // }
 
     // Distribute honor to single players
-    std::vector<std::pair<Player *, uint32>> sortVec(damagePerAlonePlayer.begin(), damagePerAlonePlayer.end());
-    std::sort(sortVec.begin(), sortVec.end(), [](std::pair<Player *, uint32> lhs, std::pair<Player *, uint32> rhs){
+    std::vector<std::pair<ObjectGuid , uint32>> sortVec(m_damageTakenHistory.begin(), m_damageTakenHistory.end());
+    std::sort(sortVec.begin(), sortVec.end(), [](std::pair<ObjectGuid, uint32> lhs, std::pair<ObjectGuid, uint32> rhs){
         return lhs.second > rhs.second;
     });
 
     for (auto rewItr :sortVec){
-        ChatHandler(this).PSendSysMessage("%s killed %s damage: %d", rewItr.first->GetName(), GetName(), rewItr.second);
+        Player* player = GetMap()->GetPlayer(rewItr.first);
+        if (player){
+            ChatHandler(this).PSendSysMessage("%s killed %s damage: %d", player->GetName(), GetName(), rewItr.second);
+        }
     }
-    Player* winner = sortVec.begin()->first;
-    const int winnerLvl = winner->GetLevel();
+    // Player* winner = GetMap()->GetPlayer(sortVec.begin()->first);
+    // const int winnerLvl = winner->GetLevel();
 
-    winner->SetMoney(winner->GetMoney() + rewardMoney);
-    winner->GiveXP(winnerLvl * 10, winner);
-    // for (const auto &rewItr : damagePerAlonePlayer)
-    // {
-    //     const uint32 victimMoney = GetMoney();
+    // winner->SetMoney(winner->GetMoney() + rewardMoney);
+    // winner->GiveXP(winnerLvl * 10, winner);
+    for (const auto &rewItr : m_damageTakenHistory)
+    {
+        Player* player = GetMap()->GetPlayer(rewItr.first);
 
-    //     SetMoney(victimMoney - rewardMoney);
+        // const uint32 victimMoney = GetMoney();
 
-    //     if (!rewItr.first->IsHonorOrXPTarget(this))
-    //     {
-    //         continue;
-    //     }
+        // SetMoney(victimMoney - rewardMoney);
 
-    //     uint32 rewPoints = uint32(HonorMgr::HonorableKillPoints(rewItr.first, this, 1) * rewItr.second / float(totalDamage));
-    //     if (rewPoints)
-    //         rewItr.first->GetHonorMgr().Add(rewPoints, HONORABLE, this);
-    // }
+        // if (!player->IsHonorOrXPTarget(this))
+        // {
+        //     continue;
+        // }
+
+        uint32 rewPoints = uint32(HonorMgr::HonorableKillPoints(player, this, 1) * rewItr.second / float(totalDamage));
+        if (rewPoints)
+            player->GetHonorMgr().Add(rewPoints, HONORABLE, this);
+    }
 
 }
 

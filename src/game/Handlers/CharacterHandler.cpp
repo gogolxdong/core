@@ -682,7 +682,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder *holder)
     if (entry)
     {
         PartyBotAI *ai = (PartyBotAI *)entry->ai;
-        sLog.outError("ai:%p", ai);
         QueryResult *result = holder->GetResult(PLAYER_LOGIN_QUERY_LOADFROM);
         Field *field = result->Fetch();
         if (ai)
@@ -810,7 +809,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder *holder)
     if (pCurrChar->HasAtLoginFlag(AT_LOGIN_FIRST))
     {
         bool learnt = ChatHandler(pCurrChar).HandleLearnAllMySpellsCommand("");
-        ChatHandler(pCurrChar).HandleLearnCommand("1515");
         pCurrChar->RemoveAtLoginFlag(AT_LOGIN_FIRST);
     }
 

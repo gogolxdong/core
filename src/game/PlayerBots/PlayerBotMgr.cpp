@@ -229,18 +229,30 @@ void PlayerBotMgr::Update(uint32 diff)
                 for (const auto opcode : pendingResponses)
                 {
                     iter->second->ai->SendFakePacket(opcode);
+                    // iter->second->GetSession()->SendPacket(opcode);
                 }
             }
 
             if (iter->second->requestRemoval)
             {
                 if (iter->second->ai && iter->second->ai->me)
-                    iter->second->ai->me->RemoveFromGroup();
+                {
 
+                    Group *group = iter->second->ai->me->GetGroup();
+                    if (group)
+                    {
+                        ObjectGuid guid = iter->second->ai->me->GetObjectGuid();
+                        iter->second->ai->me->RemoveFromGroup(group, guid);
+                    }
+                }
                 DeleteBot(iter);
 
-                if (WorldSession *sess = sWorld.FindSession(iter->second->accountId))
-                    sess->LogoutPlayer(false);
+                uint32 accountId = iter->second->accountId;
+
+                if (WorldSession *sess = sWorld.FindSession(accountId))
+                {
+                    sess->LogoutPlayer(true);
+                }
 
                 iter->second->requestRemoval = false;
                 continue;
@@ -259,6 +271,7 @@ void PlayerBotMgr::Update(uint32 diff)
             //sLog.outString("/!\\ PlayerBot in queue but Session not in World ... Account : %u, GUID : %u", iter->second->accountId, iter->second->playerGUID);
             continue;
         }
+
         if (iter->second->ai->OnSessionLoaded(iter->second, sess))
         {
             OnBotLogin(iter->second);
@@ -275,10 +288,8 @@ void PlayerBotMgr::Update(uint32 diff)
             DeleteBot(iter);
         }
     }
-
     if (!m_enableRandomBots)
         return;
-
     uint32 updatesCount = (m_elapsedTime - m_lastBotsRefresh) / m_confRandomBotsRefresh;
     for (uint32 i = 0; i < updatesCount; ++i)
     {
@@ -306,7 +317,6 @@ bool PlayerBotMgr::AddOrRemoveBot()
 
 bool PlayerBotMgr::AddBot(PlayerBotAI *ai)
 {
-    // Find a correct accountid ?
     PlayerBotEntry *e = new PlayerBotEntry();
     e->ai = ai;
     e->accountId = GenBotAccountId();
@@ -319,7 +329,6 @@ bool PlayerBotMgr::AddBot(PlayerBotAI *ai)
 
 bool PlayerBotMgr::AddBot(uint32 playerGUID, bool chatBot)
 {
-    PlayerBotEntry *e = nullptr;
     std::map<uint32, PlayerBotEntry *>::iterator iter = m_bots.find(playerGUID);
     uint32 accountId = iter->second->accountId;
     if (!accountId)
@@ -328,7 +337,7 @@ bool PlayerBotMgr::AddBot(uint32 playerGUID, bool chatBot)
         return false;
     }
 
-    e = iter->second;
+    PlayerBotEntry *e = iter->second;
     WorldSession *session = new WorldSession(accountId, nullptr, sAccountMgr.GetSecurity(accountId), 0, LOCALE_enUS);
     Player *playerBot = new Player(session);
 
@@ -336,8 +345,10 @@ bool PlayerBotMgr::AddBot(uint32 playerGUID, bool chatBot)
     e->state = PB_STATE_LOADING;
     e->playerGUID = playerGUID;
     e->chance = 10;
+    e->customBot = true;
     e->accountId = accountId;
     e->isChatBot = chatBot;
+    e->ai->botEntry = e;
 
     session->SetBot(e);
     sWorld.AddSession(session);
@@ -513,8 +524,6 @@ bool ChatHandler::HandleBotAddCommand(char *args)
     }
     uint32 accountId = sPlayerBotMgr.GenBotAccountId();
     PlayerBotEntry *e = new PlayerBotEntry(guid, accountId, 10);
-    // std::map<uint32, PlayerBotEntry *>::iterator iter = sPlayerBotMgr.m_bots.find(guid);
-    // PlayerBotEntry *e = iter->second;
 
     sLog.outError("guid: %d accountId:%d", guid, accountId);
     if (!accountId)
@@ -524,32 +533,33 @@ bool ChatHandler::HandleBotAddCommand(char *args)
     }
     WorldSession *session = new WorldSession(accountId, nullptr, sAccountMgr.GetSecurity(accountId), 0, LOCALE_enUS);
     Position p = pPlayer->GetPosition();
-    // Player(session).SetAtLoginFlag(AT_LOGIN_RELOCATE);
     e->playerGUID = guid;
     e->state = PB_STATE_LOADING;
-    
-    // PlayerBotAI* ai = CreatePlayerBotAI("MageOrgrimmarAttackerAI");
-    PlayerBotAI* ai = new PartyBotAI(pPlayer, nullptr, ROLE_INVALID,1,1,pPlayer->GetLevel(), pPlayer->GetMapId(), 0, p.x,p.y,p.z,p.o);
+    e->customBot = true;
+
+    PlayerBotAI *ai = new PartyBotAI(pPlayer, nullptr, ROLE_INVALID, 1, 1, pPlayer->GetLevel(), pPlayer->GetMapId(), 0, p.x, p.y, p.z, p.o);
     ai->m_mapId = pPlayer->GetMapId();
     ai->m_x = p.x;
     ai->m_y = p.y;
     ai->m_z = p.z;
+    ai->botEntry = e;
     e->ai = ai;
 
+    CharacterDatabase.PExecute("UPDATE `characters` SET `map`='%u', `position_x` = '%f', `position_y`='%f', `position_z`='%f' WHERE `guid` = '%u'", p.x, p.y, p.z, pPlayer->GetMapId(), guid);
     sPlayerBotMgr.m_bots[e->playerGUID] = e;
 
     session->SetBot(e);
     sWorld.AddSession(session);
     sPlayerBotMgr.m_stats.loadingCount++;
 
-    if (sPlayerBotMgr.AddBot(ai))
-        SendSysMessage("New party bot added.");
-    else
-    {
-        SendSysMessage("Error spawning bot.");
-        SetSentErrorMessage(true);
-        return false;
-    }
+    // if (sPlayerBotMgr.AddBot(ai))
+    //     SendSysMessage("New party bot added.");
+    // else
+    // {
+    //     SendSysMessage("Error spawning bot.");
+    //     SetSentErrorMessage(true);
+    //     return false;
+    // }
     PSendSysMessage("[PlayerBotMgr] Bot added : '%s', GUID=%u", charname ? charname : "NULL", guid);
     return true;
 }

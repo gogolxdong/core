@@ -500,12 +500,12 @@ void PartyBotAI::UpdateAI(uint32 const diff)
     {
         AddToPlayerGroup();
 
-        if (m_level && m_level != me->GetLevel())
-        {
-            me->GiveLevel(m_level);
-            me->InitTalentForLevel();
-            me->SetUInt32Value(PLAYER_XP, 0);
-        }
+        // if (m_level && m_level != me->GetLevel())
+        // {
+        //     me->GiveLevel(m_level);
+        //     me->InitTalentForLevel();
+        //     me->SetUInt32Value(PLAYER_XP, 0);
+        // }
 
         if (!m_cloneGuid.IsEmpty())
         {
